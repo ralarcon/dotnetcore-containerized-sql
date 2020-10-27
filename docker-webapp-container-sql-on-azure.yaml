@@ -1,6 +1,6 @@
-  name: Build and deploy Docker app with Azure SQL Backend to Azure Web App on Containers
+name: Build and deploy Docker app with Azure SQL Backend to Azure Web App on Containers
 
-  on: push
+on: push
 
 # Pre-Requisites
 # Create the target Resource Group
@@ -14,39 +14,39 @@
 
 
 
-  # CONFIGURATION
+# CONFIGURATION
 # For help, go to https://github.com/Azure/Actions
 #
 # Set up the following secrets in your repository:
 #   AZURE_CREDENTIALS, DB_ADMIN_LOGIN_PASSWORD
 # 2. Change these variables for your configuration:
-  env:
-    APP_NAME: todo-sample  # set this to your application's name
-    APP_ENVIRONMENT: dev   # environment to setup the resource. Allowed vaules: dev, qa, pro
-    APP_LOCATION_SHORT: weu  # location, be sure it represent a shortern for the {resource-group-location} used in the pre-requistes
-    DB_NAME: todosDb  # database name used by the application
-    DB_ADMIN_LOGIN: dbadminlogin  # name for the database admin login
-    DB_ADMIN_LOGIN_PASSWORD: ${{ secrets.DB_ADMIN_LOGIN_PASSWORD }}  # password for the db admin login
-    AZURE_RESOURCE_GROUP: rsg-todo-sample  # target resource group {resource-group-name} you setup in the pre-requisties
-  
-  jobs:
-    deploy_environment:
-      runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        repository: ralarcon/reference-architectures
-        path: reference-architectures
-        
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+env:
+  APP_NAME: todo-sample  # set this to your application's name
+  APP_ENVIRONMENT: dev   # environment to setup the resource. Allowed vaules: dev, qa, pro
+  APP_LOCATION_SHORT: weu  # location, be sure it represent a shortern for the {resource-group-location} used in the pre-requistes
+  DB_NAME: todosDb  # database name used by the application
+  DB_ADMIN_LOGIN: dbadminlogin  # name for the database admin login
+  DB_ADMIN_LOGIN_PASSWORD: ${{ secrets.DB_ADMIN_LOGIN_PASSWORD }}  # password for the db admin login
+  AZURE_RESOURCE_GROUP: rsg-todo-sample  # target resource group {resource-group-name} you setup in the pre-requisties
 
-      - uses: whiteducksoftware/azure-arm-action-js@v3
-        id: deploy_arm
-        with:
-          scope: resourcegroup
-          subscriptionId: ${{ secrets.AZURE_CREDENTIALS.subscriptionId }}
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-          parameters: appName=${{ env.APP_NAME }};environment=${{ env.APP_ENVIRONMENT }};locationShort=${{ env.APP_LOCATION_SHORT }};dbName=${{ env.DB_NAME }};dbAdminLogin=${{ env.DB_ADMIN_LOGIN }};dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
-          deploymentName: github-action-enviroment-deployment
+jobs:
+  deploy_environment:
+    runs-on: ubuntu-latest
+  steps:
+  - uses: actions/checkout@v1
+    repository: ralarcon/reference-architectures
+    path: reference-architectures
+    
+  - uses: azure/login@v1
+    with:
+      creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+  - uses: whiteducksoftware/azure-arm-action-js@v3
+    id: deploy_arm
+    with:
+      scope: resourcegroup
+      subscriptionId: ${{ secrets.AZURE_CREDENTIALS.subscriptionId }}
+      resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
+      parameters: appName=${{ env.APP_NAME }};environment=${{ env.APP_ENVIRONMENT }};locationShort=${{ env.APP_LOCATION_SHORT }};dbName=${{ env.DB_NAME }};dbAdminLogin=${{ env.DB_ADMIN_LOGIN }};dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
+      deploymentName: github-action-enviroment-deployment
