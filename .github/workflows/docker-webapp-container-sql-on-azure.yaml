@@ -34,8 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-      repository: ralarcon/reference-architectures
-      path: reference-architectures
+      with:
+        repository: ralarcon/reference-architectures
+        path: reference-architectures
       
     - uses: azure/login@v1
       with:
