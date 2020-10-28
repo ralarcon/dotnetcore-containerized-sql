@@ -45,7 +45,9 @@ jobs:
       
     - name: Set Azure SubscriptionId
       run: |
-        echo "AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)" >> $GITHUB_ENV
+        CURRENT_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+        echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
+        echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
 
     - uses: azure/arm-deploy@v1
       with:
