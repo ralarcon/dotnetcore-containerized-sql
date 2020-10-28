@@ -68,9 +68,9 @@ jobs:
     #     creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get Registry Info
       run: |
-        LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query loginServer -o tsv)
-        USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query name -o tsv)
-        PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query passwords[0].value -o tsv)
+        LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query loginServer -o tsv)
+        USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query name -o tsv)
+        PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query passwords[0].value -o tsv)
         echo "::add-mask::$PASSWORD"
         echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
