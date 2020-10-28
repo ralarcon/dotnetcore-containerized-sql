@@ -61,7 +61,6 @@ jobs:
     ## POTENTIALLY, OTHER WORKFLOW TO USE
     - uses: actions/checkout@v2
       with:
-        ref: master
         path: main
 
     # - uses: azure/login@v1
