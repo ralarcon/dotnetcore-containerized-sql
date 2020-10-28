@@ -43,10 +43,8 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - uses: whiteducksoftware/azure-arm-action-js@v3
-      id: deploy_arm
+    - uses: azure/arm-deploy@v1
       with:
-        scope: resourcegroup
         subscriptionId: ${{ secrets.AZURE_CREDENTIALS.subscriptionId }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
         template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
