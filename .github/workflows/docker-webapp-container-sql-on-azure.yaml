@@ -30,7 +30,7 @@ env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample  # target resource group {resource-group-name} you setup in the pre-requisties
 
 jobs:
-  deploy_environment:
+  create_build_deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -58,23 +58,19 @@ jobs:
         parameters: appName=${{ env.APP_NAME }} environment=${{ env.APP_ENVIRONMENT }} locationShort=${{ env.APP_LOCATION_SHORT }} dbName=${{ env.DB_NAME }} dbAdminLogin=${{ env.DB_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
         deploymentName: github-action-enviroment-deployment
     
-  build_publish_container:
-    runs-on: ubuntu-latest
-    steps:
+    ## POTENTIALLY, OTHER WORKFLOW TO USE
     - uses: actions/checkout@v2
       with:
         ref: master
 
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+    # - uses: azure/login@v1
+    #   with:
+    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get Registry Info
       run: |
-
-        LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ jobs.deploy_environment.steps.armdeploy.containerRegistryName }} --query loginServer -o tsv)
-        USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ jobs.deploy_environment.steps.armdeploy.containerRegistryName }} --query name -o tsv)
-        PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ jobs.deploy_environment.steps.armdeploy.containerRegistryName }} --query passwords[0].value -o tsv)
+        LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query loginServer -o tsv)
+        USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query name -o tsv)
+        PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.containerRegistryName }} --query passwords[0].value -o tsv)
         echo "::add-mask::$PASSWORD"
         echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
