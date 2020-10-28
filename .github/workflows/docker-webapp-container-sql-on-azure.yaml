@@ -41,7 +41,7 @@ jobs:
       
     - uses: azure/login@v1
       with:
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - uses: whiteducksoftware/azure-arm-action-js@v3
       id: deploy_arm
