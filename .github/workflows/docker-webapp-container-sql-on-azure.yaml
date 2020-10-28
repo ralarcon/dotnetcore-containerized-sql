@@ -35,13 +35,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: ralarcon/reference-architectures
-        ref: containerized-web-app
+        repository: ralarcon/reference-architectures ## TODO: Point to the official reference-architectures repo
+        ref: containerized-web-app ## TODO: Remove branch reference once published
         path: reference-architectures
       
     - uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        credentials: ${{ secrets.AZURE_CREDENTIALS }}
 
     - uses: whiteducksoftware/azure-arm-action-js@v3
       id: deploy_arm
