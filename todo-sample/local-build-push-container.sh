@@ -1,5 +1,5 @@
 #!/bin/bash
-containerRegistryName="todosampleacr"
+containerRegistryName="todosampleacr" #TODO: set your container registry name
 containerRegistryUser="$containerRegistryName"
 azureContainerRegistry="$containerRegistryName.azurecr.io"
 containerPassword=$(az acr credential show --resource-group todo-sample-rsg --name $containerRegistryName --query passwords[0].value -o tsv)
