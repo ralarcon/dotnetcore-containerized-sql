@@ -21,9 +21,9 @@ on: push
 #   AZURE_CREDENTIALS, DB_ADMIN_LOGIN_PASSWORD
 # 2. Change these variables for your configuration:
 env:
-  APP_NAME: todo-sample  # set this to your application's name
-  APP_ENVIRONMENT: dev   # environment to setup the resource. Allowed vaules: dev, qa, pro
-  APP_LOCATION_SHORT: weu  # location, be sure it represent a shortern for the {resource-group-location} used in the pre-requistes
+  WEB_APP_NAME: todo-sample  # set this to your application's name
+  WEB_APP_ENVIRONMENT: dev   # environment to setup the resource. Allowed vaules: dev, qa, pro
+  WEB_APP_LOCATION_SHORT: weu  # location, be sure it represent a shortern for the {resource-group-location} used in the pre-requistes
   DB_NAME: todosDb  # database name used by the application
   DB_ADMIN_LOGIN: dbadminlogin  # name for the database admin login
   DB_ADMIN_LOGIN_PASSWORD: ${{ secrets.DB_ADMIN_LOGIN_PASSWORD }}  # password for the db admin login
@@ -55,7 +55,7 @@ jobs:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
         template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-        parameters: appName=${{ env.APP_NAME }} environment=${{ env.APP_ENVIRONMENT }} locationShort=${{ env.APP_LOCATION_SHORT }} dbName=${{ env.DB_NAME }} dbAdminLogin=${{ env.DB_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
+        parameters: appName=${{ env.WEB_APP_NAME }} environment=${{ env.WEB_APP_ENVIRONMENT }} locationShort=${{ env.WEB_APP_LOCATION_SHORT }} dbName=${{ env.DB_NAME }} dbAdminLogin=${{ env.DB_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
         deploymentName: github-action-enviroment-deployment
     
     ## POTENTIALLY, OTHER WORKFLOW TO USE
@@ -101,7 +101,34 @@ jobs:
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
       working-directory: ./main/todo-sample
         
-      
+    - name: Set Web App ACR authentication
+      uses: Azure/appservice-settings@v1
+      with:
+        app-name: ${{ env.WEB_APP_NAME }} 
+        app-settings-json: |
+          [
+            {
+                "name": "DOCKER_REGISTRY_SERVER_URL",
+                "value": "${{ env.ACR_LOGIN_SERVER }}",
+                "slotSetting": false
+            },
+            {
+                "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                "value": "${{ env.ACR_USERNAME  }}",
+                "slotSetting": false
+            },
+            {
+                "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                "value": "${{ env.ACR_PASSWORD }}",
+                "slotSetting": false
+            }
+          ]
+
+    - name: 'Deploy to Azure Web App for Container'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }} 
+        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest   
         
 
 
