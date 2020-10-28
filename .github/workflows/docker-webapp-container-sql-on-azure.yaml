@@ -104,7 +104,7 @@ jobs:
     - name: Set Web App ACR authentication
       uses: Azure/appservice-settings@v1
       with:
-        app-name: ${{ env.WEB_APP_NAME }} 
+        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
         app-settings-json: |
           [
             {
@@ -127,7 +127,7 @@ jobs:
     - name: 'Deploy to Azure Web App for Container'
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: ${{ env.AZURE_WEBAPP_NAME }} 
+        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
         images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest   
         
 
