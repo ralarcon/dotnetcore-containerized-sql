@@ -33,9 +33,9 @@ jobs:
   deploy_environment:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
-        repository: ralarcon/reference-architectures@containerized-web-app
+        repository: ralarcon/reference-architectures
         path: reference-architectures
       
     - uses: azure/login@v1
