@@ -63,9 +63,6 @@ jobs:
       with:
         path: main
 
-    # - uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get Registry Info
       run: |
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query loginServer -o tsv)
