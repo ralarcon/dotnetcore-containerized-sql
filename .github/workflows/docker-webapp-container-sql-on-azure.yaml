@@ -63,23 +63,30 @@ jobs:
       with:
         path: main
 
-    - name: Get Registry Info
+    - name: Get ACR Info & Database Connection String
       run: |
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query loginServer -o tsv)
         USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query name -o tsv)
         PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query passwords[0].value -o tsv)
+        CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ steps.armdeploy.outputs.sqlServerName }} --name $DB_NAME)
+        CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.DB_ADMIN_LOGIN }}/g")
+        CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.DB_ADMIN_LOGIN_PASSWORD }}/g")
+
         echo "::add-mask::$PASSWORD"
         echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
         echo "ACR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
+        echo "DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
+        echo "QUITARRRR: $CONN_STR"
 
     - uses: azure/docker-login@v1
       with:
         login-server: ${{ env.ACR_LOGIN_SERVER }}
         username: ${{ env.ACR_USERNAME }}
         password: ${{ env.ACR_PASSWORD }}
-        
-    - run: |
+    
+    - name: Build & Push Container
+      run: |
         echo "Build image and push to ${{ env.ACR_LOGIN_SERVER }}"
 
         echo "Building the container..."
@@ -97,7 +104,24 @@ jobs:
         echo "Repositories in the container registry"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
       working-directory: ./main/todo-sample
-        
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
+      run: |
+          dotnet tool install --global dotnet-ef
+          dotnet tool restore
+      env:
+        ASPNETCORE_ENVIRONMENT: Development
+
+    - name: Update database
+      run: |
+        dotnet ef database update
+      env:
+        ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STR }}
+      working-directory: ./main/todo-sample
+
     - name: Set Web App ACR authentication
       uses: Azure/appservice-settings@v1
       with:
@@ -126,7 +150,7 @@ jobs:
       with: 
         app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
         images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest   
-        
+
 
 
   #update_webapp:
