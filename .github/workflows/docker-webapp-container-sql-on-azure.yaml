@@ -132,7 +132,7 @@ jobs:
     - name: 'Deploy to Azure Web App for Container'
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
+        app-name: ${{ env.WEB_APP_NAME }} 
         images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest 
         
     - name: Update database
