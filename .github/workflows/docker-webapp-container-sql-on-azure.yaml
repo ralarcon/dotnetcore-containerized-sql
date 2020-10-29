@@ -109,16 +109,14 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
-      run: |
-          dotnet tool install --global dotnet-ef
-          dotnet tool restore
-      env:
-        ASPNETCORE_ENVIRONMENT: Development
-
+      
     - name: Update database
       run: |
+        dotnet tool install --global dotnet-ef
+        dotnet tool restore
         dotnet ef database update
       env:
+        ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STR }}
       working-directory: ./main/todo-sample
 
