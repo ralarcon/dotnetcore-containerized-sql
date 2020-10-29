@@ -68,7 +68,7 @@ jobs:
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query loginServer -o tsv)
         USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query name -o tsv)
         PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query passwords[0].value -o tsv)
-        CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ steps.armdeploy.outputs.sqlServerName }} --name $DB_NAME)
+        CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ steps.armdeploy.outputs.sqlServerName }} --name $DB_NAME -o tsv)
         CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.DB_ADMIN_LOGIN }}/g")
         CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.DB_ADMIN_LOGIN_PASSWORD }}/g")
 
