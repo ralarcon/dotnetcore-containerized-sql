@@ -109,7 +109,7 @@ jobs:
     - name: Set Web App ACR authentication
       uses: Azure/appservice-settings@v1
       with:
-        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
+        app-name: ${{ env.WEB_APP_NAME }}  
         app-settings-json: |
           [
             {
