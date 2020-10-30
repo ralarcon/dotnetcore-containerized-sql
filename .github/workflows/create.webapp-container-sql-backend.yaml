@@ -1,13 +1,7 @@
 name: Create Resources ACR, App Service (linux Containers), Azure SQL Server
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI or API.
-on:
-  workflow_dispatch:
-    inputs:
-      name:
-        description: 'Create or Update Azure Resources'
-        default: 'This worklfow will create or update all the azure resources when run'  
-        required: true      
+on: workflow_dispatch
 
 # Pre-Requisites
 # Create the target Resource Group
@@ -38,13 +32,15 @@ jobs:
   deploy_resources:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Get ARM Templates
+      uses: actions/checkout@v2
       with:
         repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
         ref: containerized-web-app-refactor-params    ## TODO: Remove branch reference once published
         path: reference-architectures
-      
-    - uses: azure/login@v1
+
+    - name: Login for az cli commands 
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
       
@@ -54,12 +50,12 @@ jobs:
         echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
         echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
 
-    - uses: azure/arm-deploy@v1
-      id: armdeploy
+    - name: Deploy ARM templates
+      uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
         template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
         parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
-        deploymentName: github-action-enviroment-deployment
+        deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}-${{ github.sha }}
     

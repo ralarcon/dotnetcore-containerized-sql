@@ -31,15 +31,17 @@ jobs:
   build_deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Source Code
+      uses: actions/checkout@v2
       with:
         path: main
 
-    - uses: azure/login@v1
+    - name: Login for az cli commands 
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-    - name: Get ACR Info & Database Connection String
+    - name: Get ACR Info & Database Connection
       run: |
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
         USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query name -o tsv)
@@ -55,7 +57,8 @@ jobs:
         echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
         echo "APP_VERSION_DATE=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
-    - uses: azure/docker-login@v1
+    - name: Login to ACR
+      uses: azure/docker-login@v1
       with:
         login-server: ${{ env.ACR_LOGIN_SERVER }}
         username: ${{ env.ACR_USERNAME }}
@@ -86,10 +89,11 @@ jobs:
       with:
         dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
 
-    - name: Set Web App ACR authentication
+    - name: Set Web App Settings
       uses: Azure/appservice-settings@v1
       with:
         app-name: ${{ env.WEB_APP_NAME }}  
+        slot-name: staging
         app-settings-json: |
           [
             {
@@ -109,22 +113,24 @@ jobs:
             },
             {
                 "name": "VersionInfo__Number",
-                "value": "1.0.${{ github.run_number }}"
+                "value": "1.0.${{ github.run_number }}",
+                "slotSetting": false
             },
                         {
                 "name": "VersionInfo__Date",
                 "value": "${{ env.APP_VERSION_DATE }}"
+                "slotSetting": false,
             }
           ]
 
-    - name: 'Deploy to Azure Web App for Container'
+    - name: Deploy Azure WebApp to Staging
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.WEB_APP_NAME }} 
         images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest
         slot-name: staging
         
-    - name: Update database
+    - name: Update Database
       run: |
         dotnet tool install --global dotnet-ef
         dotnet tool restore
@@ -136,5 +142,5 @@ jobs:
 
     - name: Swap to production slot
       run: |
-        az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production 
-    
+        az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production
+        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0])"
