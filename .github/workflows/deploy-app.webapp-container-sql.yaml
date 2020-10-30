@@ -108,11 +108,11 @@ jobs:
                 "slotSetting": false
             },
             {
-                "name": "VersionInfo::Number",
+                "name": "VersionInfo__Number",
                 "value": "1.0.${{ github.run_number }}"
             },
                         {
-                "name": "VersionInfo::Date",
+                "name": "VersionInfo__Date",
                 "value": "{{ env.APP_VERSION_DATE }}"
             }
           ]
