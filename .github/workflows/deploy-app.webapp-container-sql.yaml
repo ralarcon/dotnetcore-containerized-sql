@@ -34,26 +34,11 @@ jobs:
     - uses: actions/checkout@v2
       with:
         path: main
-        
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-    - name: Get Azure SubscriptionId
-      run: |
-        CURRENT_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-        echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
-        echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
-
-    - uses: azure/arm-deploy@v1
-      id: armdeploy
-      with:
-        subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
-        deploymentName: github-action-enviroment-deployment
-
     - name: Get ACR Info & Database Connection String
       run: |
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
