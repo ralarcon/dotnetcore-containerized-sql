@@ -30,7 +30,7 @@ env:
   SQL_DB_NAME: todoDb                     # set the name for the Azure SQL Database
 
 jobs:
-  deploy_resources:
+  create_build_deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Get ARM Templates
@@ -121,29 +121,43 @@ jobs:
         app-settings-json: |
           [
             {
-                "name": "DOCKER_REGISTRY_SERVER_URL",
-                "value": "${{ env.ACR_LOGIN_SERVER }}",
-                "slotSetting": false
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false",
+              "slotSetting": false
             },
             {
-                "name": "DOCKER_REGISTRY_SERVER_USERNAME",
-                "value": "${{ env.ACR_USERNAME  }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_URL",
+              "value": "${{ env.ACR_LOGIN_SERVER }}",
+              "slotSetting": false
             },
             {
-                "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
-                "value": "${{ env.ACR_PASSWORD }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+              "value": "${{ env.ACR_USERNAME  }}",
+              "slotSetting": false
             },
             {
-                "name": "VersionInfo__Number",
-                "value": "1.0.${{ github.run_number }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+              "value": "${{ env.ACR_PASSWORD }}",
+              "slotSetting": false
             },
-                        {
-                "name": "VersionInfo__Date",
-                "value": "${{ env.APP_VERSION_DATE }}",
-                "slotSetting": false
+            {
+              "name": "VersionInfo__Number",
+              "value": "1.0.${{ github.run_number }}",
+              "slotSetting": false
+            },
+            {
+              "name": "VersionInfo__Date",
+              "value": "${{ env.APP_VERSION_DATE }}",
+              "slotSetting": false
+            }
+          ]
+        connection-string-settings: |
+          [
+            {
+              "name": "MyDbConnection",
+              "value": "${{ env.SQL_DB_CONN_STR }}",
+              "type": "SQLAzure",
+              "slotSetting": false
             }
           ]
 

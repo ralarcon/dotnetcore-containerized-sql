@@ -17,7 +17,7 @@ on: workflow_dispatch
 #
 # Set up the following secrets in your repository:
 #   AZURE_CREDENTIALS, SQL_SERVER_ADMIN_PASSWORD
-# 2. Change these variables for your configuration:
+# 2. Change these variables for your configuration (and keep these in sync with the create.webapp-container-sql-backend.yaml workflow):
 env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
@@ -97,29 +97,43 @@ jobs:
         app-settings-json: |
           [
             {
-                "name": "DOCKER_REGISTRY_SERVER_URL",
-                "value": "${{ env.ACR_LOGIN_SERVER }}",
-                "slotSetting": false
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false",
+              "slotSetting": false
             },
             {
-                "name": "DOCKER_REGISTRY_SERVER_USERNAME",
-                "value": "${{ env.ACR_USERNAME  }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_URL",
+              "value": "${{ env.ACR_LOGIN_SERVER }}",
+              "slotSetting": false
             },
             {
-                "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
-                "value": "${{ env.ACR_PASSWORD }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+              "value": "${{ env.ACR_USERNAME  }}",
+              "slotSetting": false
             },
             {
-                "name": "VersionInfo__Number",
-                "value": "1.0.${{ github.run_number }}",
-                "slotSetting": false
+              "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+              "value": "${{ env.ACR_PASSWORD }}",
+              "slotSetting": false
             },
-                        {
-                "name": "VersionInfo__Date",
-                "value": "${{ env.APP_VERSION_DATE }}",
-                "slotSetting": false
+            {
+              "name": "VersionInfo__Number",
+              "value": "1.0.${{ github.run_number }}",
+              "slotSetting": false
+            },
+            {
+              "name": "VersionInfo__Date",
+              "value": "${{ env.APP_VERSION_DATE }}",
+              "slotSetting": false
+            }
+          ]
+        connection-string-settings: |
+          [
+            {
+              "name": "MyDbConnection",
+              "value": "${{ env.SQL_DB_CONN_STR }}",
+              "type": "SQLAzure",
+              "slotSetting": false
             }
           ]
 
