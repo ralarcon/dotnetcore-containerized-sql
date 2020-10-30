@@ -7,7 +7,7 @@ if [ "$ConnectionStrings__MyDbConnection" = "" ]
 fi
 
 echo "Building the container..."
-docker build -t todo-sample:latest .
+docker build -t todo-sample:local .
 echo
 
 echo "Running the container (interactive)..."

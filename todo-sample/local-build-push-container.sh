@@ -7,15 +7,15 @@ containerPassword=$(az acr credential show --resource-group todo-sample-rsg --na
 echo "Build image and push to $azureContainerRegistry"
 
 echo "Building the container..."
-docker build -t todo-sample:latest .
+docker build -t todo-sample:local .
 echo
 
 echo "Tagging for azure container registry"
-docker tag todo-sample $azureContainerRegistry/todo-sample:latest
+docker tag todo-sample $azureContainerRegistry/todo-sample:local
 echo
 
 echo "Push image"
-docker push $azureContainerRegistry/todo-sample:latest
+docker push $azureContainerRegistry/todo-sample:local
 echo
 
 echo "Repositories in the container registry"
