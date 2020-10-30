@@ -1,4 +1,4 @@
-name: Create Resources ACR, App Service (linux Containers), Azure SQL Server
+name: Create Resources with ARM Templates
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI or API.
 on: workflow_dispatch
