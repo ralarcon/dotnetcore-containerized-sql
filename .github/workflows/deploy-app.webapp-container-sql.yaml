@@ -113,7 +113,7 @@ jobs:
             },
                         {
                 "name": "VersionInfo__Date",
-                "value": "{{ env.APP_VERSION_DATE }}"
+                "value": "${{ env.APP_VERSION_DATE }}"
             }
           ]
 
@@ -121,7 +121,8 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.WEB_APP_NAME }} 
-        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest 
+        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest
+        slot-name: staging
         
     - name: Update database
       run: |
@@ -131,5 +132,9 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ./main/todo-sample        
+      working-directory: ./main/todo-sample
+
+    - name: Swap to production slot
+      run: |
+        az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production 
     

@@ -1,0 +1,155 @@
+name: Build and deploy Docker app with Azure SQL Backend to Azure Web App on Containers
+
+on: push
+
+# Pre-Requisites
+# Create the target Resource Group
+# 1. Open the Azure Cloud Shell at https://shell.azure.com. You can alternately use the Azure CLI if you've installed it locally. (For more information on Cloud Shell, see the Cloud Shell Overview.)  
+#   az group create --name {resource-group-name} --location {resource-group-location}
+# 
+# 2. Create a Service Principal to manage your resource group from GitHub Actions
+#   az ad sp create-for-rbac --name "{service-principal-name}" --sdk-auth --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}  
+#
+# For help, go to: https://github.com/Azure/login#configure-deployment-credentials
+
+
+
+# CONFIGURATION
+# For help, go to https://github.com/Azure/Actions
+#
+# Set up the following secrets in your repository:
+#   AZURE_CREDENTIALS, DB_ADMIN_LOGIN_PASSWORD
+# 2. Change these variables for your configuration:
+env:
+  WEB_APP_NAME: todo-sample  # set this to your application's name
+  WEB_APP_ENVIRONMENT: dev   # environment to setup the resource. Allowed vaules: dev, qa, pro
+  WEB_APP_LOCATION_SHORT: weu  # location, be sure it represent a shortern for the {resource-group-location} used in the pre-requistes
+  DB_NAME: todosDb  # database name used by the application
+  DB_ADMIN_LOGIN: dbadminlogin  # name for the database admin login
+  DB_ADMIN_LOGIN_PASSWORD: ${{ secrets.DB_ADMIN_LOGIN_PASSWORD }}  # password for the db admin login
+  AZURE_RESOURCE_GROUP: rsg-todo-sample  # target resource group {resource-group-name} you setup in the pre-requisties
+
+jobs:
+  create_build_deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ralarcon/reference-architectures ## TODO: Point to the official reference-architectures repo
+        ref: containerized-web-app ## TODO: Remove branch reference once published
+        path: reference-architectures
+      
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+    - name: Set Azure SubscriptionId
+      run: |
+        CURRENT_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+        echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
+        echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
+
+    - uses: azure/arm-deploy@v1
+      id: armdeploy
+      with:
+        subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
+        parameters: appName=${{ env.WEB_APP_NAME }} environment=${{ env.WEB_APP_ENVIRONMENT }} locationShort=${{ env.WEB_APP_LOCATION_SHORT }} dbName=${{ env.DB_NAME }} dbAdminLogin=${{ env.DB_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.DB_ADMIN_LOGIN_PASSWORD }}
+        deploymentName: github-action-enviroment-deployment
+    
+    ## POTENTIALLY, OTHER WORKFLOW TO USE
+    - uses: actions/checkout@v2
+      with:
+        path: main
+
+    - name: Get ACR Info & Database Connection String
+      run: |
+        LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query loginServer -o tsv)
+        USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query name -o tsv)
+        PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ steps.armdeploy.outputs.containerRegistryName }} --query passwords[0].value -o tsv)
+        CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ steps.armdeploy.outputs.sqlServerName }} --name $DB_NAME -o tsv)
+        CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.DB_ADMIN_LOGIN }}/g")
+        CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.DB_ADMIN_LOGIN_PASSWORD }}/g")
+
+        echo "::add-mask::$PASSWORD"
+        echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
+        echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
+        echo "ACR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
+        echo "DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
+        echo "QUITARRRR: $CONN_STR"
+
+    - uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.ACR_LOGIN_SERVER }}
+        username: ${{ env.ACR_USERNAME }}
+        password: ${{ env.ACR_PASSWORD }}
+    
+    - name: Build & Push Container
+      run: |
+        echo "Build image and push to ${{ env.ACR_LOGIN_SERVER }}"
+
+        echo "Building the container..."
+        docker build -t todo-sample:latest .
+        echo
+
+        echo "Tagging for azure container registry"
+        docker tag todo-sample ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest
+        echo
+
+        echo "Push image"
+        docker push ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest
+        echo
+
+        echo "Repositories in the container registry"
+        az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
+      working-directory: ./main/todo-sample
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
+      
+    - name: Update database
+      run: |
+        dotnet tool install --global dotnet-ef
+        dotnet tool restore
+        dotnet ef database update
+      env:
+        ASPNETCORE_ENVIRONMENT: Development
+        ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STR }}
+      working-directory: ./main/todo-sample
+
+    - name: Set Web App ACR authentication
+      uses: Azure/appservice-settings@v1
+      with:
+        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
+        app-settings-json: |
+          [
+            {
+                "name": "DOCKER_REGISTRY_SERVER_URL",
+                "value": "${{ env.ACR_LOGIN_SERVER }}",
+                "slotSetting": false
+            },
+            {
+                "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                "value": "${{ env.ACR_USERNAME  }}",
+                "slotSetting": false
+            },
+            {
+                "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                "value": "${{ env.ACR_PASSWORD }}",
+                "slotSetting": false
+            }
+          ]
+
+    - name: 'Deploy to Azure Web App for Container'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ steps.armdeploy.outputs.webSiteName }} 
+        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest   
+
+
+
+  #update_webapp:
+    
