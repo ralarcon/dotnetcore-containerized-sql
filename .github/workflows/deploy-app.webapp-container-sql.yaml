@@ -53,6 +53,7 @@ jobs:
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
         echo "ACR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
         echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
+        echo "APP_VERSION_DATE=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
     - uses: azure/docker-login@v1
       with:
@@ -105,6 +106,14 @@ jobs:
                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
                 "value": "${{ env.ACR_PASSWORD }}",
                 "slotSetting": false
+            },
+            {
+                "name": "VersionInfo::Number",
+                "value": "1.0.${{ github.run_number }}"
+            },
+                        {
+                "name": "VersionInfo::Date",
+                "value": "{{ env.APP_VERSION_DATE }}"
             }
           ]
 
