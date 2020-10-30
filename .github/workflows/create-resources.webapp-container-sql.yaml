@@ -1,10 +1,14 @@
 name: Create Resources ACR, App Service (linux Containers), Azure SQL Server
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+    # Inputs the workflow accepts.
     inputs:
-      msg: 'Sample Msg'
-      default: 'Creates or update the Azure infrastructure for the sample'
+      name:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'Message to show'
+        # Default value if no value is explicitly provided
+        default: 'Create or update the sample Azure infrastructure based on the ARM template'
 
 #on: workflow_dispatch ## Manually Triggered (initially, can be configured to be launched when the code from the repository changes)
  
