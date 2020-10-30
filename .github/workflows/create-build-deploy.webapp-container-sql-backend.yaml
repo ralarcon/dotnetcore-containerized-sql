@@ -35,7 +35,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
-        ref: containerized-web-app-refactor-params    ## TODO: Remove branch reference once published
+        ref: container-web-app                        ## TODO: Remove branch reference once published
         path: reference-architectures
 
     - name: Login for az cli commands 
@@ -165,6 +165,6 @@ jobs:
     - name: Swap to production slot
       run: |
         az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production
-        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0])"
+        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0] -o tsv)"
 
     

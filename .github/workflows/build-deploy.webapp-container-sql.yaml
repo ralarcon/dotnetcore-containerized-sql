@@ -143,4 +143,4 @@ jobs:
     - name: Swap to production slot
       run: |
         az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production
-        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0])"
+        echo "Swap finished. App Service Application URL: https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0] -o tsv)"
