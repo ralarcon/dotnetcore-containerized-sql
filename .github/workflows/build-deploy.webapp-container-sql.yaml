@@ -1,6 +1,6 @@
 name: Create, Build and Deploy Docker WebApp with Azure SQL
 
-on: workflow_dispatch
+on: push
 
 # Pre-Requisites
 # Create the target Resource Group
@@ -28,38 +28,17 @@ env:
   SQL_DB_NAME: todoDb                     # set the name for the Azure SQL Database
 
 jobs:
-  create_build_deploy:
+  build_deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
-        ref: containerized-web-app-refactor-params    ## TODO: Remove branch reference once published
-        path: reference-architectures
-      
+        path: main
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-    - name: Get Azure SubscriptionId
-      run: |
-        CURRENT_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-        echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
-        echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
-
-    - uses: azure/arm-deploy@v1
-      id: armdeploy
-      with:
-        subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
-        deploymentName: github-action-enviroment-deployment
-    
-    - uses: actions/checkout@v2
-      with:
-        path: main
-
     - name: Get ACR Info & Database Connection String
       run: |
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
@@ -74,6 +53,7 @@ jobs:
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
         echo "ACR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
         echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
+        echo "APP_VERSION_DATE=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
 
     - uses: azure/docker-login@v1
       with:
@@ -126,6 +106,14 @@ jobs:
                 "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
                 "value": "${{ env.ACR_PASSWORD }}",
                 "slotSetting": false
+            },
+            {
+                "name": "VersionInfo__Number",
+                "value": "1.0.${{ github.run_number }}"
+            },
+                        {
+                "name": "VersionInfo__Date",
+                "value": "${{ env.APP_VERSION_DATE }}"
             }
           ]
 
@@ -133,7 +121,8 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.WEB_APP_NAME }} 
-        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest 
+        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:latest
+        slot-name: staging
         
     - name: Update database
       run: |
@@ -143,5 +132,9 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ./main/todo-sample        
+      working-directory: ./main/todo-sample
+
+    - name: Swap to production slot
+      run: |
+        az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production 
     
