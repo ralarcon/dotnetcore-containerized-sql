@@ -57,5 +57,5 @@ jobs:
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
         template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
         parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
-        deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}-${{ github.sha }}
+        deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
     
