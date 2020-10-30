@@ -1,6 +1,6 @@
 name: Create, Build and Deploy Docker WebApp with Azure SQL
 
-on: workflow_dispatch
+on: push
 
 # Pre-Requisites
 # Create the target Resource Group
