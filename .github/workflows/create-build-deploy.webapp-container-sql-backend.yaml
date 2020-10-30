@@ -97,7 +97,7 @@ jobs:
         echo
 
         echo "Tagging for azure container registry"
-        docker tag todo-sample ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        docker tag todo-sample:${{ github.sha }} ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
         echo
 
         echo "Push image"
