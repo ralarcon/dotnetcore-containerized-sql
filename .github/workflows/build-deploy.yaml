@@ -33,8 +33,6 @@ jobs:
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v2
-      with:
-        path: main
 
     - name: Login for az cli commands 
       uses: azure/login@v1
@@ -82,7 +80,7 @@ jobs:
 
         echo "Repositories in the container registry"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
-      working-directory: ${{ github.workspace }}/application
+      working-directory: application
       
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -152,7 +150,7 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ${{ github.workspace }}/application
+      working-directory: application
 
     - name: Swap to production slot
       run: |
