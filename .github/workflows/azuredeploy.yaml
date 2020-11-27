@@ -1,4 +1,4 @@
-name: Create Resources with ARM Templates
+name: Create or Update Infrastructure
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI or API.
 on: workflow_dispatch
@@ -23,6 +23,7 @@ env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
   ACR_NAME: crtodosample                  # set the name for the Azure Container Registry
+  CONTAINER_IMAGE_NAME: todo-sample       # set the name for the container image
   SQL_SERVER_NAME: sql-todo-sample        # set the name for the Azure SQL Server
   SQL_SERVER_ADMIN_LOGIN: dbadminlogin    # set the name for the Azure SQL Server admin login
   SQL_SERVER_ADMIN_PASSWORD: ${{ secrets.SQL_SERVER_ADMIN_PASSWORD }}  # password for the Azure SQL Sever admin login -> must be in the secrets
@@ -46,12 +47,36 @@ jobs:
         echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
         echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
 
+    - name: "Check if container image exists"
+      run: |
+        echo "Checks if the container image already exists to avoid the ARM deployment change the existing image if it is already deployed"
+        echo "If the container registry or the container image does not exists, it sets a default container image"
+
+        DEFAULT_CONTAINER_IMAGE="DOCKER|mcr.microsoft.com/dotnet/core/samples:aspnetapp"
+        echo "Setting default container image: $DEFAULT_CONTAINER_IMAGE"
+        echo "CONTAINER_IMAGE=$DEFAULT_CONTAINER_IMAGE" >> $GITHUB_ENV
+
+        ACR=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.ACR_NAME }}'].name" -o tsv)
+        if [ $ACR -ne "" ]; then
+          echo "Azure Container Registry Exist: $ACR"
+          IMAGE = $(az acr repository show -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --query imageName -o tsv | "")
+          if [ $IMAGE -ne "" ]; then
+            echo "Image: $IMAGE"
+
+            LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
+            LATEST_TAG=$(az acr repository show-manifests -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --orderby time_desc --query [0].tags[0] -o tsv)
+            EXISTING_IMAGE="DOCKER|$LOGIN_SERVER/$IMAGE:$TAG"
+            echo "Setting existing container image: $EXISTING_IMAGE"
+            echo "CONTAINER_IMAGE=$EXISTING_IMAGE" >> $GITHUB_ENV
+          fi
+        fi
+
     - name: Deploy ARM templates
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
         template: infrastructure/azuredeploy.json
-        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
+        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} containerImage=${{ env.CONTAINER_IMAGE }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
         deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
     

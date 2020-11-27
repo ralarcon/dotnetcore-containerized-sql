@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/temprepo/dotnetcore-sqldb-tutorial/bin/Debug/netcoreapp3.1/DotNetCoreSqlDb.dll",
+            "program": "${workspaceFolder}/application/bin/Debug/netcoreapp3.1/DotNetCoreSqlDb.dll",
             "args": [],
             "cwd": "${workspaceFolder}/temprepo/dotnetcore-sqldb-tutorial",
             "stopAtEntry": false,

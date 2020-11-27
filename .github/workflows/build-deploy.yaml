@@ -1,4 +1,4 @@
-name: Build and Deploy Docker WebApp with Azure SQL
+name: Build & Deploy Version
 
 on: workflow_dispatch
 
@@ -22,6 +22,7 @@ env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
   ACR_NAME: crtodosample                  # set the name for the Azure Container Registry
+  CONTAINER_IMAGE_NAME: todo-sample       # set the name for the container image
   SQL_SERVER_NAME: sql-todo-sample        # set the name for the Azure SQL Server
   SQL_SERVER_ADMIN_LOGIN: dbadminlogin    # set the name for the Azure SQL Server admin login
   SQL_SERVER_ADMIN_PASSWORD: ${{ secrets.SQL_SERVER_ADMIN_PASSWORD }}  # password for the Azure SQL Sever admin login -> must be in the secrets
@@ -67,15 +68,15 @@ jobs:
         echo "Build image and push to ${{ env.ACR_LOGIN_SERVER }}"
 
         echo "Building the container..."
-        docker build -t todo-sample:${{ github.sha }} .
+        docker build -t ${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }} .
         echo
 
         echo "Tagging for azure container registry"
-        docker tag todo-sample ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        docker tag ${{ env.CONTAINER_IMAGE_NAME }} ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
         echo "Push image"
-        docker push ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
         echo "Repositories in the container registry"
@@ -139,7 +140,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.WEB_APP_NAME }} 
-        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        images: ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         slot-name: staging
         
     - name: Update Database
@@ -155,4 +156,4 @@ jobs:
     - name: Swap to production slot
       run: |
         az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production
-        echo "Swap finished. App Service Application URL: https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0] -o tsv)"
+        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --query hostNames[0] -o tsv)"

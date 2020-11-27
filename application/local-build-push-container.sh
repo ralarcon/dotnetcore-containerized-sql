@@ -4,21 +4,23 @@
 # az account set --subscription "<your_subscription>" 
 containerRegistryName="todosampleacr" #TODO: set your container registry name
 containerRegistryUser="$containerRegistryName"
+containerImageName="todo-sample"
 azureContainerRegistry="$containerRegistryName.azurecr.io"
-containerPassword=$(az acr credential show --resource-group todo-sample-rsg --name $containerRegistryName --query passwords[0].value -o tsv)
+resourceGroup="todo-sample-rsg"
+containerPassword=$(az acr credential show --resource-group $resourceGroup --name $containerRegistryName --query passwords[0].value -o tsv)
 
 echo "Build image and push to $azureContainerRegistry"
 
 echo "Building the container..."
-docker build -t todo-sample:local .
+docker build -t $containerImageName:local .
 echo
 
 echo "Tagging for azure container registry"
-docker tag todo-sample $azureContainerRegistry/todo-sample:local
+docker tag $containerImageName $azureContainerRegistry/$containerImageName:local
 echo
 
 echo "Push image"
-docker push $azureContainerRegistry/todo-sample:local
+docker push $azureContainerRegistry/$containerImageName:local
 echo
 
 echo "Repositories in the container registry"
