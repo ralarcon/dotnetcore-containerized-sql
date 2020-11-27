@@ -40,6 +40,12 @@ jobs:
       with:
         path: main
 
+    - name: ECHO
+      run: |
+        echo "${{ env.GITHUB_NAMESPACE }}"
+        echo "${{ env.GITHUB_NAMESPACE }}"
+        ls -la
+        
     - name: Login for az cli commands 
       uses: azure/login@v1
       with:
