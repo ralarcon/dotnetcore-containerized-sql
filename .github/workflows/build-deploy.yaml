@@ -82,7 +82,7 @@ jobs:
 
         echo "Repositories in the container registry"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
-      working-directory: ${{env.GITHUB_WORKSPACE}}/application
+      working-directory: ${{ github.workspace }}/application
       
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -152,7 +152,7 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ${{env.GITHUB_WORKSPACE}}/application
+      working-directory: ${{ github.workspace }}/application
 
     - name: Swap to production slot
       run: |
