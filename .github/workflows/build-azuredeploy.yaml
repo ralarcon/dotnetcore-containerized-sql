@@ -60,10 +60,10 @@ jobs:
         echo "CONTAINER_IMAGE=$DEFAULT_CONTAINER_IMAGE" >> $GITHUB_ENV
 
         ACR=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.ACR_NAME }}'].name" -o tsv)
-        if [ "$ACR" -ne "" ]; then
+        if [ -n "$ACR" ]; then
           echo "Azure Container Registry Exist: $ACR"
           IMAGE=$(az acr repository show -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --query imageName -o tsv)
-          if [ "$IMAGE" -ne "" ]; then
+          if [ -n "$IMAGE" ]; then
             echo "Image: $IMAGE"
 
             LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
