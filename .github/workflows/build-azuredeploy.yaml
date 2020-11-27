@@ -1,4 +1,4 @@
-name: Update Infrastructure & Deploy Version
+name: Update Infrastructure, Build and Deploy Version
 
 on: 
   push:
@@ -56,13 +56,13 @@ jobs:
         echo "If the container registry or the container image does not exists, it sets a default container image"
 
         DEFAULT_CONTAINER_IMAGE="DOCKER|mcr.microsoft.com/dotnet/core/samples:aspnetapp"
-        echo "Setting default container image: $DEFAULT_CONTAINER_IMAGE"
+        echo "Default container image: $DEFAULT_CONTAINER_IMAGE"
         echo "CONTAINER_IMAGE=$DEFAULT_CONTAINER_IMAGE" >> $GITHUB_ENV
 
         ACR=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.ACR_NAME }}'].name" -o tsv)
         if [ $ACR -ne "" ]; then
           echo "Azure Container Registry Exist: $ACR"
-          IMAGE = $(az acr repository show -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --query imageName -o tsv | "")
+          IMAGE=$(az acr repository show -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --query imageName -o tsv)
           if [ $IMAGE -ne "" ]; then
             echo "Image: $IMAGE"
 
