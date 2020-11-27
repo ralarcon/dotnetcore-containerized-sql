@@ -264,12 +264,6 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
           "linuxFxVersion": "[parameters('containerImage')]",
-          "appSettings": [
-            {
-              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
-              "value": "false"
-            }
-          ],
           "connectionStrings": [
             {
               "name": "MyDbConnection",

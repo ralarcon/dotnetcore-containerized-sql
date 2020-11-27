@@ -62,6 +62,7 @@ jobs:
         WEB_APP=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.WEB_APP_NAME }}'].name" -o tsv)
         if [ -n "$WEB_APP" ]; then
           EXISTING_IMAGE=$(az webapp config show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --query linuxFxVersion -o tsv)
+          
           echo "Setting existing container image: $EXISTING_IMAGE"
           echo "CONTAINER_IMAGE=$EXISTING_IMAGE" >> $GITHUB_ENV
         fi
