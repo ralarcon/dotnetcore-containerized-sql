@@ -32,13 +32,6 @@ jobs:
   deploy_arm_templates:
     runs-on: ubuntu-latest
     steps:
-    - name: Get ARM Templates
-      uses: actions/checkout@v2
-      with:
-        repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
-        ref: container-web-app    ## TODO: Remove branch reference once published
-        path: reference-architectures
-
     - name: Login for az cli commands 
       uses: azure/login@v1
       with:
@@ -55,7 +48,7 @@ jobs:
       with:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
+        template: infrastructure/azuredeploy.json
         parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
         deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
     

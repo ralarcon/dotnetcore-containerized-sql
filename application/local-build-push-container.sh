@@ -1,4 +1,7 @@
 #!/bin/bash
+# You have to login and select your default subscription to azure befor using this script: 
+# az login
+# az account set --subscription "<your_subscription>" 
 containerRegistryName="todosampleacr" #TODO: set your container registry name
 containerRegistryUser="$containerRegistryName"
 azureContainerRegistry="$containerRegistryName.azurecr.io"
