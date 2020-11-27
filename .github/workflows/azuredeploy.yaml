@@ -47,28 +47,20 @@ jobs:
         echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
         echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
 
-    - name: "Check if container image exists"
+    - name: "Avoid overwrite existing deployment"
       run: |
-        echo "Checks if the container image already exists to avoid the ARM deployment change the existing image if it is already deployed"
-        echo "If the container registry or the container image does not exists, it sets a default container image"
+        echo "Checks if the webapp is already deployed, if so, get its docker image to avoid the ARM deployment overwrite it."
 
         DEFAULT_CONTAINER_IMAGE="DOCKER|mcr.microsoft.com/dotnet/core/samples:aspnetapp"
-        echo "Setting default container image: $DEFAULT_CONTAINER_IMAGE"
+        echo "Default container image: $DEFAULT_CONTAINER_IMAGE"
         echo "CONTAINER_IMAGE=$DEFAULT_CONTAINER_IMAGE" >> $GITHUB_ENV
 
-        ACR=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.ACR_NAME }}'].name" -o tsv)
-        if [ $ACR -ne "" ]; then
-          echo "Azure Container Registry Exist: $ACR"
-          IMAGE = $(az acr repository show -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --query imageName -o tsv | "")
-          if [ $IMAGE -ne "" ]; then
-            echo "Image: $IMAGE"
 
-            LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
-            LATEST_TAG=$(az acr repository show-manifests -n ${{ env.ACR_NAME }} --repository ${{ env.CONTAINER_IMAGE_NAME }} --orderby time_desc --query [0].tags[0] -o tsv)
-            EXISTING_IMAGE="DOCKER|$LOGIN_SERVER/$IMAGE:$TAG"
-            echo "Setting existing container image: $EXISTING_IMAGE"
-            echo "CONTAINER_IMAGE=$EXISTING_IMAGE" >> $GITHUB_ENV
-          fi
+        WEB_APP=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.WEB_APP_NAME }}'].name" -o tsv)
+        if [ -n "$WEB_APP" ]; then
+          EXISTING_IMAGE=$(az webapp config show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --query linuxFxVersion -o tsv)
+          echo "Setting existing container image: $EXISTING_IMAGE"
+          echo "CONTAINER_IMAGE=$EXISTING_IMAGE" >> $GITHUB_ENV
         fi
 
     - name: Deploy ARM templates
