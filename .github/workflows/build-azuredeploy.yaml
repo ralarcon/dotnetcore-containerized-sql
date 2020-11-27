@@ -42,9 +42,9 @@ jobs:
 
     - name: ECHO
       run: |
-        echo "${{ env.GITHUB_NAMESPACE }}"
-        echo "${{ env.GITHUB_NAMESPACE }}"
-        ls -la
+        echo "${{ github.workspace }}"
+        echo "${{ github.workspace }}"
+        ls -lar ${{ github.workspace }}
         
     - name: Login for az cli commands 
       uses: azure/login@v1
