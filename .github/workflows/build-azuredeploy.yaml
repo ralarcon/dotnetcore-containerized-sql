@@ -39,7 +39,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         path: main
-            
+
     - name: Login for az cli commands 
       uses: azure/login@v1
       with:
@@ -56,7 +56,7 @@ jobs:
       with:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: infrastructure/azuredeploy.json
+        template: ${{env.GITHUB_WORKSPACE}}/infrastructure/azuredeploy.json
         parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
         deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
       
@@ -101,7 +101,7 @@ jobs:
 
         echo "Repositories in the container registry"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
-      working-directory: ./main/todo-sample
+      working-directory: ${{env.GITHUB_WORKSPACE}}/application
       
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -171,7 +171,7 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ./main/todo-sample
+      working-directory: ${{env.GITHUB_WORKSPACE}}/application
 
     - name: Swap to production slot
       run: |
