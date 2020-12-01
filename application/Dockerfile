@@ -15,6 +15,6 @@ FROM build as publish
 RUN dotnet publish "DotNetCoreSqlDb.csproj" -c Release -o /app/publish
 
 FROM base as final
-WORKDIR /app
+WORKDIR /home/site/wwwroot
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DotNetCoreSqlDb.dll"]
