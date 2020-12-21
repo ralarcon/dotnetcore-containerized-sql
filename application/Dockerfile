@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 as base
+FROM mcr.microsoft.com/appsvc/dotnetcore:3.1_20200707.6 as base
 WORKDIR /app
 EXPOSE 5000
 ENV ASPNETCORE_URLS="http://*:5000"
@@ -15,6 +15,6 @@ FROM build as publish
 RUN dotnet publish "DotNetCoreSqlDb.csproj" -c Release -o /app/publish
 
 FROM base as final
-WORKDIR /app
+WORKDIR /home/site/wwwroot
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DotNetCoreSqlDb.dll"]
