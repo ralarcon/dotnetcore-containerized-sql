@@ -1,4 +1,4 @@
-name: Create Resources with ARM Templates
+name: Create or Update Infrastructure
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI or API.
 on: workflow_dispatch
@@ -23,6 +23,7 @@ env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
   ACR_NAME: crtodosample                  # set the name for the Azure Container Registry
+  CONTAINER_IMAGE_NAME: todo-sample       # set the name for the container image
   SQL_SERVER_NAME: sql-todo-sample        # set the name for the Azure SQL Server
   SQL_SERVER_ADMIN_LOGIN: dbadminlogin    # set the name for the Azure SQL Server admin login
   SQL_SERVER_ADMIN_PASSWORD: ${{ secrets.SQL_SERVER_ADMIN_PASSWORD }}  # password for the Azure SQL Sever admin login -> must be in the secrets
@@ -32,12 +33,8 @@ jobs:
   deploy_arm_templates:
     runs-on: ubuntu-latest
     steps:
-    - name: Get ARM Templates
+    - name: Checkout Source Code
       uses: actions/checkout@v2
-      with:
-        repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
-        ref: container-web-app    ## TODO: Remove branch reference once published
-        path: reference-architectures
 
     - name: Login for az cli commands 
       uses: azure/login@v1
@@ -50,12 +47,28 @@ jobs:
         echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
         echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
 
+    - name: "Avoid overwrite existing deployment"
+      run: |
+        echo "Checks if the webapp is already deployed, if so, get its docker image to avoid the ARM deployment overwrite it."
+
+        DEFAULT_CONTAINER_IMAGE="DOCKER|mcr.microsoft.com/dotnet/core/samples:aspnetapp"
+        echo "Default container image: $DEFAULT_CONTAINER_IMAGE"
+        echo "CONTAINER_IMAGE=$DEFAULT_CONTAINER_IMAGE" >> $GITHUB_ENV
+
+        WEB_APP=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[?name=='${{ env.WEB_APP_NAME }}'].name" -o tsv)
+        if [ -n "$WEB_APP" ]; then
+          EXISTING_IMAGE=$(az webapp config show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --query linuxFxVersion -o tsv)
+          echo "The webapp already exists. The existing container image will be used."
+          echo "Setting existing container image: $EXISTING_IMAGE"
+          echo "CONTAINER_IMAGE=$EXISTING_IMAGE" >> $GITHUB_ENV
+        fi
+
     - name: Deploy ARM templates
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
+        template: infrastructure/azuredeploy.json
+        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} containerImage=${{ env.CONTAINER_IMAGE }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
         deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
     

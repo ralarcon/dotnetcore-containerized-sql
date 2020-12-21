@@ -1,8 +1,6 @@
-name: Create, Build and Deploy Docker WebApp with Azure SQL
+name: Build & Deploy Version
 
-on: 
-  push:
-  workflow_dispatch:
+on: workflow_dispatch
 
 # Pre-Requisites
 # Create the target Resource Group
@@ -19,51 +17,28 @@ on:
 #
 # Set up the following secrets in your repository:
 #   AZURE_CREDENTIALS, SQL_SERVER_ADMIN_PASSWORD
-# 2. Change these variables for your configuration:
+# 2. Change these variables for your configuration (and keep these in sync with the create.webapp-container-sql-backend.yaml workflow):
 env:
   AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
   ACR_NAME: crtodosample                  # set the name for the Azure Container Registry
+  CONTAINER_IMAGE_NAME: todo-sample       # set the name for the container image
   SQL_SERVER_NAME: sql-todo-sample        # set the name for the Azure SQL Server
   SQL_SERVER_ADMIN_LOGIN: dbadminlogin    # set the name for the Azure SQL Server admin login
   SQL_SERVER_ADMIN_PASSWORD: ${{ secrets.SQL_SERVER_ADMIN_PASSWORD }}  # password for the Azure SQL Sever admin login -> must be in the secrets
   SQL_DB_NAME: todoDb                     # set the name for the Azure SQL Database
 
 jobs:
-  create_build_deploy:
+  build_deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Get ARM Templates
+    - name: Checkout Source Code
       uses: actions/checkout@v2
-      with:
-        repository: ralarcon/reference-architectures  ## TODO: Point to the official reference-architectures repo
-        ref: container-web-app                        ## TODO: Remove branch reference once published
-        path: reference-architectures
 
     - name: Login for az cli commands 
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
-    - name: Get Azure SubscriptionId
-      run: |
-        CURRENT_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-        echo "AZURE_SUBSCRIPTION_ID=$CURRENT_SUBSCRIPTION_ID" >> $GITHUB_ENV
-        echo "Current SubscriptionId: $CURRENT_SUBSCRIPTION_ID"
-
-    - name: Deploy ARM templates
-      uses: azure/arm-deploy@v1
-      with:
-        subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-        template: reference-architectures/managed-web-app/containerized-web-app/PaaS-Containerized/Templates/PaaS-Containerized.json
-        parameters: webSiteName=${{ env.WEB_APP_NAME }} containerRegistryName=${{ env.ACR_NAME }} sqlServerName=${{ env.SQL_SERVER_NAME }} dbAdminLogin=${{ env.SQL_SERVER_ADMIN_LOGIN }} dbAdminLoginPassword=${{ env.SQL_SERVER_ADMIN_PASSWORD }} dbName=${{ env.SQL_DB_NAME }}
-        deploymentName: gha-deployment-${{ github.run_id }}-${{ github.run_number }}
-
-    - name: Checkout Source Code
-      uses: actions/checkout@v2
-      with:
-        path: main
       
     - name: Get ACR Info & Database Connection
       run: |
@@ -93,20 +68,20 @@ jobs:
         echo "Build image and push to ${{ env.ACR_LOGIN_SERVER }}"
 
         echo "Building the container..."
-        docker build -t todo-sample:${{ github.sha }} .
+        docker build -t ${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }} .
         echo
 
         echo "Tagging for azure container registry"
-        docker tag todo-sample:${{ github.sha }} ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        docker tag ${{ env.CONTAINER_IMAGE_NAME }} ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
         echo "Push image"
-        docker push ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
         echo "Repositories in the container registry"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
-      working-directory: ./main/todo-sample
+      working-directory: application
       
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
@@ -151,7 +126,7 @@ jobs:
               "slotSetting": false
             }
           ]
-        connection-strings-json: |
+        connection-string-settings: |
           [
             {
               "name": "MyDbConnection",
@@ -165,7 +140,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.WEB_APP_NAME }} 
-        images: ${{ env.ACR_LOGIN_SERVER }}/todo-sample:${{ github.sha }}
+        images: ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         slot-name: staging
         
     - name: Update Database
@@ -176,11 +151,9 @@ jobs:
       env:
         ASPNETCORE_ENVIRONMENT: Development
         ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
-      working-directory: ./main/todo-sample
+      working-directory: application
 
     - name: Swap to production slot
       run: |
         az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --slot staging --target-slot production
-        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group rsg-todo-sample --name app-todo-sample --query hostNames[0] -o tsv)"
-
-    
+        echo "Swap finished. WebApp accessible at https://$(az webapp show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.WEB_APP_NAME }} --query hostNames[0] -o tsv)"
