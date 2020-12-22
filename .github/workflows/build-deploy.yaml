@@ -72,7 +72,7 @@ jobs:
         echo
 
         echo "Tagging for ACR..."
-        docker tag ${{ env.CONTAINER_IMAGE_NAME }} ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
+        docker tag ${{ env.CONTAINER_IMAGE_NAME }}:ci ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
         echo "Push image to ACR"
