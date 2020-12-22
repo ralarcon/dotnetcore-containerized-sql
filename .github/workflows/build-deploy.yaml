@@ -5,7 +5,7 @@ on:
   push:
     paths-ignore:
     - 'infrastructure/**'
-    - './github/workflows/**'
+    - '.github/workflows/**'
 
 # This workflow consider the Azure resources are already pre-created by using the azuredeploy.yaml workflow.
 # 1. Azure Resource Group creation
