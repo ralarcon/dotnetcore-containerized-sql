@@ -4,9 +4,9 @@
 # az account set --subscription "<your_subscription>" 
 containerRegistryName="acrtodosample" #TODO: set your container registry name
 containerRegistryUser="$containerRegistryName"
-containerImageName="app-todo-sample"
+containerImageName="app-todo-sample"  
 azureContainerRegistry="$containerRegistryName.azurecr.io"
-resourceGroup="rg-todo-sample"
+resourceGroup="rg-todo-sample"        #TODO: set your resource group
 containerPassword=$(az acr credential show --resource-group $resourceGroup --name $containerRegistryName --query passwords[0].value -o tsv)
 
 echo "Build image and push to $azureContainerRegistry"
