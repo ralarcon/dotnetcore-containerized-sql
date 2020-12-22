@@ -68,7 +68,7 @@ jobs:
         echo "Build image and push to ${{ env.ACR_LOGIN_SERVER }}"
 
         echo "Building the container..."
-        docker build -t ${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }} .
+        docker build -t ${{ env.CONTAINER_IMAGE_NAME }}:ci .
         echo
 
         echo "Tagging for ACR..."
