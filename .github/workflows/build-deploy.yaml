@@ -1,12 +1,13 @@
-name: Build & Deploy Version
+name: Build Image, Push & Deploy
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
     - 'infrastructure/**'
     - './github/workflows/**'
 
-# This workflow asumes that the Azure resources are already pre-created. Which includes:
+# This workflow consider the Azure resources are already pre-created by using the azuredeploy.yaml workflow.
 # 1. Azure Resource Group creation
 # 2. Service principal and credentials creation
 # 3. Git Hub repo required secrets.
