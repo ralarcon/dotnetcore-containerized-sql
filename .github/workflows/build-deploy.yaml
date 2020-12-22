@@ -1,32 +1,27 @@
 name: Build & Deploy Version
 
-on: workflow_dispatch
+on:
+  push:
+    paths-ignore:
+    - 'infrastructure/**'
+    - './github/workflows/**'
 
-# Pre-Requisites
-# Create the target Resource Group
-# 1. Open the Azure Cloud Shell at https://shell.azure.com. You can alternately use the Azure CLI if you've installed it locally. (For more information on Cloud Shell, see the Cloud Shell Overview.)  
-#   az group create --name {resource-group-name} --location {resource-group-location}
-# 
-# 2. Create a Service Principal to manage your resource group from GitHub Actions
-#   az ad sp create-for-rbac --name "{service-principal-name}" --sdk-auth --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}  
-#
-# For help, go to: https://github.com/Azure/login#configure-deployment-credentials
+# This workflow asumes that the Azure resources are already pre-created. Which includes:
+# 1. Azure Resource Group creation
+# 2. Service principal and credentials creation
+# 3. Git Hub repo required secrets.
 
-# CONFIGURATION
-# For help, go to https://github.com/Azure/Actions
-#
-# Set up the following secrets in your repository:
-#   AZURE_CREDENTIALS, SQL_SERVER_ADMIN_PASSWORD
-# 2. Change these variables for your configuration (and keep these in sync with the create.webapp-container-sql-backend.yaml workflow):
+# Follow the detailed instructions to setup the pre-requisites. Then execute the azuredeploy.yaml from the Git Hub repo Actions (workflow display name: "Create Azure Resources")
+
 env:
-  AZURE_RESOURCE_GROUP: rsg-todo-sample   # target resource, must match the {resource-group-name} you setup in the pre-requisties
-  WEB_APP_NAME: app-todo-sample           # set the name for the Web App on Azure
-  ACR_NAME: crtodosample                  # set the name for the Azure Container Registry
-  CONTAINER_IMAGE_NAME: todo-sample       # set the name for the container image
-  SQL_SERVER_NAME: sql-todo-sample        # set the name for the Azure SQL Server
-  SQL_SERVER_ADMIN_LOGIN: dbadminlogin    # set the name for the Azure SQL Server admin login
+  AZURE_RESOURCE_GROUP: rg-todo-sample  # target resource, must match the {resource-group-name} you setup in the pre-requisties
+  WEB_APP_NAME: app-todo-sample         # set the name for the Web App on Azure
+  ACR_NAME: acrtodosample               # set the name for the Azure Container Registry
+  CONTAINER_IMAGE_NAME: app-todo-sample # set the name for the container image
+  SQL_SERVER_NAME: sql-todo-sample      # set the name for the Azure SQL Server
+  SQL_SERVER_ADMIN_LOGIN: dbadminlogin  # set the name for the Azure SQL Server admin login
   SQL_SERVER_ADMIN_PASSWORD: ${{ secrets.SQL_SERVER_ADMIN_PASSWORD }}  # password for the Azure SQL Sever admin login -> must be in the secrets
-  SQL_DB_NAME: todoDb                     # set the name for the Azure SQL Database
+  SQL_DB_NAME: sqldb-todo               # set the name for the Azure SQL Database
 
 jobs:
   build_deploy:
@@ -39,9 +34,10 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
     - name: Get ACR Info & Database Connection
       run: |
+        # Retrieve information from Azure
         LOGIN_SERVER=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query loginServer -o tsv)
         USERNAME=$(az acr show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query name -o tsv)
         PASSWORD=$(az acr credential show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
@@ -49,8 +45,11 @@ jobs:
         CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.SQL_SERVER_ADMIN_LOGIN }}/g")
         CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.SQL_SERVER_ADMIN_PASSWORD }}/g")
 
+        # Ensure the password is masked when written to the logs
         echo "::add-mask::$PASSWORD"
-        echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
+        
+        # Export variables to the GitHub environment
+        echo "ACR_LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV 
         echo "ACR_USERNAME=$USERNAME" >> $GITHUB_ENV
         echo "ACR_PASSWORD=$PASSWORD" >> $GITHUB_ENV
         echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
@@ -71,15 +70,15 @@ jobs:
         docker build -t ${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }} .
         echo
 
-        echo "Tagging for azure container registry"
+        echo "Tagging for ACR..."
         docker tag ${{ env.CONTAINER_IMAGE_NAME }} ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
-        echo "Push image"
+        echo "Push image to ACR"
         docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         echo
 
-        echo "Repositories in the container registry"
+        echo "List the repositories in the ACR"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
       working-directory: application
       
@@ -142,7 +141,8 @@ jobs:
         app-name: ${{ env.WEB_APP_NAME }} 
         images: ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         slot-name: staging
-        
+      
+    # This task updates the database with the lates schema. Valid for intial setup and small non-changes. For breaking changes, other strategy needs to be in place.
     - name: Update Database
       run: |
         dotnet tool install --global dotnet-ef

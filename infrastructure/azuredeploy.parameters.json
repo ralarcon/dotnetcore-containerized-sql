@@ -2,11 +2,11 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "webSiteName": {
+    "webAppName": {
       "value": "app-todo-sample"
     },
     "containerRegistryName": {
-      "value": "crtodosample"
+      "value": "acrtodosample"
     },
     "sqlServerName": {
       "value": "sql-todo-sample"
@@ -15,7 +15,7 @@
       "value": "dbusradm"
     },
     "dbName": {
-      "value": "tododb"
+      "value": "sqldb-todo"
     }
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "webSiteName": {
+    "webAppName": {
       "type": "string",
       "minLength": 5,
       "maxLength": 20
@@ -112,10 +112,10 @@
   },
   "variables": {
     "sqlServerName": "[parameters('sqlServerName')]",
-    "webSiteName": "[parameters('webSiteName')]",
-    "appServicePlanName": "[concat('plan-', parameters('webSiteName'))]",
+    "webAppName": "[parameters('webAppName')]",
+    "appServicePlanName": "[concat('plan-', variables('webAppName'))]",
     "containerRegistryName": "[parameters('containerRegistryName')]",
-    "storageAccountName": "[tolower(replace(replace(concat('st', parameters('webSiteName')), '-',''), '_',''))]",
+    "storageAccountName": "[tolower(replace(replace(concat('st', variables('webAppName')), '-',''), '_',''))]",
     "sqlDatabaseServerlessTiers": [
       "GP_S_Gen5_1",
       "GP_S_Gen5_2",
@@ -128,7 +128,7 @@
     "name": "[variables('containerRegistryName')]",
     "location": "[resourceGroup().location]",
     "tags": {
-      "app": "[parameters('webSiteName')]"
+      "app": "[variables('webAppName')]"
     },
     "sku": {
       "name": "Basic",
@@ -166,7 +166,7 @@
     },
     "dependsOn": [],
     "tags": {
-      "app": "[parameters('webSiteName')]"
+      "app": "[variables('webAppName')]"
     },
 
     "kind": "StorageV2",
@@ -180,7 +180,7 @@
     "location": "[resourceGroup().location]",
     "apiVersion": "2019-06-01-preview",
     "tags": {
-      "app": "[parameters('webSiteName')]"
+      "app": "[variables('webAppName')]"
     },
     "properties": {
       "administratorLogin": "[parameters('dbAdminLogin')]",
@@ -193,7 +193,7 @@
         "type": "databases",
         "location": "[resourceGroup().location]",
         "tags": {
-          "app": "[parameters('webSiteName')]"
+          "app": "[variables('webAppName')]"
         },
         "apiVersion": "2017-10-01-preview",
         "dependsOn": [
@@ -232,7 +232,7 @@
       "[resourceId('Microsoft.ContainerRegistry/registries', variables('containerRegistryName'))]"
     ],
     "tags": {
-      "app": "[parameters('webSiteName')]"
+      "app": "[variables('webAppName')]"
     },
     "location": "[resourceGroup().location]",
     "sku": {
@@ -247,7 +247,7 @@
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2020-06-01",
-      "name": "[variables('webSiteName')]",
+      "name": "[variables('webAppName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
@@ -255,12 +255,12 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
       ],
       "tags": {
-        "app": "[parameters('webSiteName')]",
+        "app": "[variables('webAppName')]",
         "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName')))]": "empty"
       },
       "kind": "app,linux,container",
       "properties": {
-        "name": "[variables('webSiteName')]",
+        "name": "[variables('webAppName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
           "linuxFxVersion": "[parameters('containerImage')]",
@@ -280,11 +280,11 @@
           "name": "staging",
           "type": "slots",
           "tags": {
-            "app": "[parameters('webSiteName')]"
+            "app": "[variables('webAppName')]"
           },
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('webSiteName'))]"
+            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
           ],
           "properties": {
           },
