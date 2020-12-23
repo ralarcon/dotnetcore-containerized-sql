@@ -20,13 +20,13 @@ The sample source code is based in the tutorial for building [ASP.NET Core and A
 ## Steps to create an end-to-end CI/CD workflow
 
 This repo contains two different GitHub workflows:
-* **[Create Azure Resources](.github/workflows/azuredeploy.yaml)**: To create the Azure Resources required for the sample by using an ARM template. This workflow will create the following resources:
+* [Create Azure Resources](.github/workflows/azuredeploy.yaml): To create the Azure Resources required for the sample by using an ARM template. This workflow will create the following resources:
     - App Service Plan (Linux).
     - Web App for Containers (with one staging slot)
     - Azure Container Registry.
     - Azure SQL Server and the Azure SQL Database for the sample.
     - Storage Account.
-* **[Build image, push & deploy](.github/workflows/build-deploy.yaml)**: this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, deploy or update the database and, finally, swap the slots.
+* [Build image, push & deploy](.github/workflows/build-deploy.yaml): this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, deploy or update the database and, finally, swap the slots.
 
 To start, you can fork directly this repo and follow the instructions to properly setup the workflows.
 
@@ -87,14 +87,14 @@ For further deatils, check https://docs.github.com/en/free-pro-team@latest/actio
 Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requistes setup you just setup.
 
 ### 4. Execute the Create Resources worklfow
- Go to your repo [Actions](actions) tab, under *All workflows* you will see the [Create Azure Resources](actions?query=workflow%3A"Create+Azure+Resources") workflow. 
+ Go to your repo [Actions](/actions) tab, under *All workflows* you will see the [Create Azure Resources](/actions?query=workflow%3A"Create+Azure+Resources") workflow. 
 
 Launch the worflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
 
 This will create all the required resources in the Azure Subscritption and Resource Group you configured.
 
 ## Test your CI/CD workflow
-To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](actions) tab.
+To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](/actions) tab.
 
 ## Workflows yaml explained
 
