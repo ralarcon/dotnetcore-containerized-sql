@@ -9,7 +9,7 @@ languages:
 - dotnet
 ---
 
-# Sample Containerized ASP.NET Core and SQL Database for GitHub Actions
+# Containerized ASP.NET Core and SQL Database for GitHub Actions
 
 This is repo contains a sample ASP.NET Core application which uses an Azure SQL database as backend. The web app is containerized and deployed to Azure Web Apps for Containers using by using GitHub Actions.
 
@@ -27,6 +27,8 @@ This repo contains two different GitHub workflows:
     - Azure SQL Server and the Azure SQL Database for the sample.
     - Storage Account.
 * **[Build image, push & deploy](.github/workflows/build-deploy.yaml)**: this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, deploy or update the database and, finally, swap the slots.
+
+To start, you can fork directly this repo and follow the instructions to properly setup the workflows.
 
 ### Pre-requisites
 The [Create Azure Resources](.github/workflows/azuredeploy.yaml) workflow, describes in the `azuredeploy.yaml` file the pre-requisites needed to setup the CI/CD.
@@ -57,7 +59,7 @@ Sample:
 az ad sp create-for-rbac --name "sp-todo-app" --sdk-auth --role contributor --scopes /subscriptions/00000000-0000-aaaa-bbbb-00000000/resourceGroups/rg-todo-sample
 ```
 
-Save the command output as it will be used to setup the required `AZURE_CREDENTIALS` secret in following steps.
+Save the command output as it will be used to setup the required `AZURE_CREDENTIALS` secret in following step.
 ```
 {
   "clientId": "<guid>",
@@ -80,6 +82,19 @@ Add the following secrets to your repo:
 - AZURE_CREDENTIALS: the content is the output of the previous executed command.
 - SQL_SERVER_ADMIN_PASSWORD: this will be the password used to setup and access the Azure SQL database.
 
-For further deatils, check https://github.com/Azure/Actions
+For further deatils, check https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
 
-Finally, be sure that in both workflows, the variables have the desired values and matches the pre-requistes setup you just made.
+Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requistes setup you just setup.
+
+### 4. Execute the Create Resources worklfow
+ Go to your repo [Actions](actions) tab, under *All workflows* you will see the [Create Azure Resources](actions?query=workflow%3A"Create+Azure+Resources") workflow. 
+
+Launch the worflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
+
+This will create all the required resources in the Azure Subscritption and Resource Group you configured.
+
+## Test your CI/CD workflow
+To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](actions) tab.
+
+## Workflows yaml explained
+
