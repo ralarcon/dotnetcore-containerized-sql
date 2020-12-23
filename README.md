@@ -87,14 +87,14 @@ For further deatils, check https://docs.github.com/en/free-pro-team@latest/actio
 Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requistes setup you just setup.
 
 ### 4. Execute the Create Resources worklfow
- Go to your repo [Actions](/actions) tab, under *All workflows* you will see the [Create Azure Resources](/actions?query=workflow%3A"Create+Azure+Resources") workflow. 
+ Go to your repo [Actions](../../actions) tab, under *All workflows* you will see the [Create Azure Resources](../../actions?query=workflow%3A"Create+Azure+Resources") workflow. 
 
 Launch the worflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
 
 This will create all the required resources in the Azure Subscritption and Resource Group you configured.
 
 ## Test your CI/CD workflow
-To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](/actions) tab.
+To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](../../actions) tab.
 
 ## Workflows yaml explained
 

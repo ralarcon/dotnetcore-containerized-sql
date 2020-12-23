@@ -18,7 +18,7 @@ on: workflow_dispatch
 #
 # 1. Set up the following secrets in your repository: AZURE_CREDENTIALS, SQL_SERVER_ADMIN_PASSWORD
 #
-# 2. Change these variables for your configuration (and keep these in sync with the build-deploy.webapp-container-sql-backend.yaml workflow):
+# 2. Change these variables for your configuration (and keep these in sync with the build-deploy.yaml workflow):
 env:
   AZURE_RESOURCE_GROUP: rg-todo-sample  # target resource, must match the {resource-group-name} you setup in the pre-requisties
   WEB_APP_NAME: app-todo-sample         # set the name for the Web App on Azure
