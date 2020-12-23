@@ -7,12 +7,11 @@ on:
     - 'infrastructure/**'
     - '.github/workflows/**'
 
-# This workflow consider the Azure resources are already pre-created by using the azuredeploy.yaml workflow.
-# 1. Azure Resource Group creation
-# 2. Service principal and credentials creation
-# 3. Git Hub repo required secrets.
-
-# Follow the detailed instructions to setup the pre-requisites. Then execute the azuredeploy.yaml from the Git Hub repo Actions (workflow display name: "Create Azure Resources")
+# This workflow consider the required Azure Resources are ready. Follow the detailed instructions to setup the pre-requisites in azuredeploy.yaml to:
+#   1. Prepare the Azure Resource Group
+#   2. Setup the service principal and create the credentials
+#   3. Create the Git Hub repo required secrets.
+#   4. Finally execute the azuredeploy.yaml from the Git Hub repo Actions (workflow display name: "Create Azure Resources")
 
 env:
   AZURE_RESOURCE_GROUP: rg-todo-sample  # target resource, must match the {resource-group-name} you setup in the pre-requisties
