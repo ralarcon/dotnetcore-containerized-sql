@@ -1,4 +1,4 @@
-name: Build Image, Push & Deploy
+name: Build image, push & deploy
 
 on:
   workflow_dispatch:

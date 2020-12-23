@@ -28,7 +28,7 @@ This repo contains two different GitHub workflows:
     - Storage Account.
 * [Build image, push & deploy](.github/workflows/build-deploy.yaml): this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, deploy or update the database and, finally, swap the slots.
 
-To start, you can fork directly this repo and follow the instructions to properly setup the workflows.
+To start, you can directly fork this repo and follow the instructions to properly setup the workflows.
 
 ### Pre-requisites
 The [Create Azure Resources](.github/workflows/azuredeploy.yaml) workflow, describes in the `azuredeploy.yaml` file the pre-requisites needed to setup the CI/CD.
@@ -36,7 +36,7 @@ The [Create Azure Resources](.github/workflows/azuredeploy.yaml) workflow, descr
 ### 1. Create the Azure Resource group
 Open the Azure Cloud Shell at https://shell.azure.com. You can alternately use the Azure CLI if you've installed it locally. (For more information on Cloud Shell, see the [Cloud Shell Overview](https://docs.microsoft.com/en-us/azure/cloud-shell/overview))   
 
-``` cmd
+```
 az group create --name {resource-group-name} --location {resource-group-location}
 ```
 Replace the `{resource-group-name}` and the `{resource-group-location}` for one of your preferences. By default, the resource group name used in the .yaml workflows is `rg-todo-sample`, be sure to replace it if you change the name.
@@ -84,17 +84,17 @@ Add the following secrets to your repo:
 
 For further deatils, check https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
 
-Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requistes setup you just setup.
+Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requisites setup you just setup.
 
-### 4. Execute the Create Resources worklfow
- Go to your repo [Actions](/actions) tab, under *All workflows* you will see the [Create Azure Resources](/actions?query=workflow%3A"Create+Azure+Resources") workflow. 
+### 4. Execute the Create Resources workflow
+ Go to your repo [Actions](../../actions) tab, under *All workflows* you will see the [Create Azure Resources](../../actions?query=workflow%3A"Create+Azure+Resources") workflow. 
 
-Launch the worflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
+Launch the workflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
 
-This will create all the required resources in the Azure Subscritption and Resource Group you configured.
+This will create all the required resources in the Azure Subscription and Resource Group you configured.
 
 ## Test your CI/CD workflow
-To lauch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](/actions) tab.
+To launch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](../../actions) tab.
 
 ## Workflows yaml explained
 
