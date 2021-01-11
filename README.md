@@ -3,13 +3,13 @@ page_type: sample
 description: "Deploy containerized dotnet application using GitHub Actions"
 products:
 - GitHub Actions
-- Azure App service
+- Web App for Containers
 - Azure SQL Database
 languages:
 - dotnet
 ---
 
-# Containerized ASP.NET Core and SQL Database for GitHub Actions
+# Containerized ASP.NET Core and Azure SQL db for GitHub Actions
 
 This is repo contains a sample ASP.NET Core application which uses an Azure SQL database as backend. The web app is containerized and deployed to Azure Web Apps for Containers using by using GitHub Actions.
 
@@ -17,7 +17,7 @@ For all samples to set up GitHub workflows, see [Create your first workflow](htt
 
 The sample source code is based in the tutorial for building [ASP.NET Core and Azure SQL Database app in App Services](https://docs.microsoft.com/azure/app-service/containers/tutorial-dotnetcore-sqldb-app). 
 
-## Steps to create an end-to-end CI/CD workflow
+## Setup an end-to-end CI/CD workflow
 
 This repo contains two different GitHub workflows:
 * [Create Azure Resources](.github/workflows/azuredeploy.yaml): To create the Azure Resources required for the sample by using an ARM template. This workflow will create the following resources:
@@ -26,7 +26,7 @@ This repo contains two different GitHub workflows:
     - Azure Container Registry.
     - Azure SQL Server and the Azure SQL Database for the sample.
     - Storage Account.
-* [Build image, push & deploy](.github/workflows/build-deploy.yaml): this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, deploy or update the database and, finally, swap the slots.
+* [Build image, push & deploy](.github/workflows/build-deploy.yaml): this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, update the database and, finally, swap the slots.
 
 To start, you can directly fork this repo and follow the instructions to properly setup the workflows.
 
@@ -46,7 +46,7 @@ Sample:
 az group create --name rg-todo-sample --location westeurope
 ```
 ### 2. Create a Service Principal to manage your resource group from GitHub Actions
-We will use a service principal from the GitHub workflow to be able to create the resources and make the deployments.
+We will use a service principal from the GitHub workflow to create and manage the azure resources.
 
 ```
 az ad sp create-for-rbac --name "{service-principal-name}" --sdk-auth --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
@@ -59,7 +59,7 @@ Sample:
 az ad sp create-for-rbac --name "sp-todo-app" --sdk-auth --role contributor --scopes /subscriptions/00000000-0000-aaaa-bbbb-00000000/resourceGroups/rg-todo-sample
 ```
 
-Save the command output as it will be used to setup the required `AZURE_CREDENTIALS` secret in following step.
+Save the command output, it will be used to setup the required `AZURE_CREDENTIALS` secret in the following step.
 ```
 {
   "clientId": "<guid>",
@@ -77,14 +77,14 @@ Save the command output as it will be used to setup the required `AZURE_CREDENTI
 ```
 For further details, check https://github.com/Azure/login#configure-deployment-credentials
 
-### 3. Configure the required secrets 
+### 3. Configure the required repo secrets 
 Add the following secrets to your repo:
 - AZURE_CREDENTIALS: the content is the output of the previous executed command.
 - SQL_SERVER_ADMIN_PASSWORD: this will be the password used to setup and access the Azure SQL database.
 
 For further deatils, check https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
 
-Finally, be sure that in both workflows, the variables have the correct values and matches the pre-requisites setup you just setup.
+Finally, review both workflows and ensure the defined variables have the correct values and matches the pre-requisites you have just setup.
 
 ### 4. Execute the Create Resources workflow
  Go to your repo [Actions](../../actions) tab, under *All workflows* you will see the [Create Azure Resources](../../actions?query=workflow%3A"Create+Azure+Resources") workflow. 
@@ -97,7 +97,7 @@ This will create all the required resources in the Azure Subscription and Resour
 To launch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](../../actions) tab.
 
 ## Workflows YAML explained
-There are two workflows defined in your repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Buid image, push, deploy*.
+As mentioned before, there are two workflows defined in the repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Buid image, push, deploy*.
 ### Create Azure Resources
 Use this workflow to initially setup the Azure Resources by executing the ARM template which contains the resources definition. This workflow is defined in the [azuredeploy.yaml](.github/workflows/azuredeploy.yaml) file, and have the following steps:
 
@@ -109,7 +109,7 @@ Use this workflow to initially setup the Azure Resources by executing the ARM te
 ### Buid image, push, deploy
 This workflow builds the container with the latest web app changes, push it to the Azure Container Registry and, updates the web application *staging* slot to point to the latest container pushed. Then updates the database (just in case there is any change to be reflected in the database schema). Finally, swap the slots to leave the latest version in the production slot. 
 
-To ilustrate the versioning, the workflow generates a version number, based in the github workflow run number, which is stored in the app service web application settings. 
+To ilustrate the versioning, the workflow generates a version number, based in the [github workflow run number](https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#github-context) context variable, which is stored in the app service web application settings. 
 
 The workflow is configured to be triggered by each change made to your repo source code (excluding changes affecting to the *infrastructure* and *.github/workflows* folders). 
 
@@ -125,4 +125,4 @@ The definition is in the [build-deploy.yaml](.github/workflows/build-deploy.yaml
 * Finally, executes an Azure CLI script to swap the *staging* slot to *production*
 
 ## Contributing
-Refer to the [Contributing page](/application/CONTRIBUTING.md)
+Refer to the [Contributing page](/CONTRIBUTING.md)
