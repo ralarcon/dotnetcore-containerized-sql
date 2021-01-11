@@ -81,11 +81,6 @@ jobs:
         echo "List the repositories in the ACR"
         az acr repository list -n ${{ env.ACR_LOGIN_SERVER }}        
       working-directory: application
-      
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
 
     - name: Set Web App Settings
       uses: Azure/appservice-settings@v1
@@ -142,6 +137,11 @@ jobs:
         images: ${{ env.ACR_LOGIN_SERVER }}/${{ env.CONTAINER_IMAGE_NAME }}:${{ github.sha }}
         slot-name: staging
       
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel
+
     # This task updates the database with the lates schema. Valid for intial setup and small non-changes. For breaking changes, other strategy needs to be in place.
     - name: Update Database
       run: |
