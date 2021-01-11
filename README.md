@@ -96,5 +96,33 @@ This will create all the required resources in the Azure Subscription and Resour
 ## Test your CI/CD workflow
 To launch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](../../actions) tab.
 
-## Workflows yaml explained
+## Workflows YAML explained
+There are two workflows defined in your repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Buid image, push, deploy*.
+### Create Azure Resources
+Use this workflow to initially setup the Azure Resources by executing the ARM template which contains the resources definition. This workflow is defined in the [azuredeploy.yaml](.github/workflows/azuredeploy.yaml) file, and have the following steps:
 
+* Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
+* Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
+* Executes a custom in-line script to get the target Azure Subscription Id
+* Deploy the resources defined in the provided [ARM template](/infrastructure/azuredeploy.json) by using the [ARM Deploy](https://github.com/Azure/arm-deploy) action.
+
+### Buid image, push, deploy
+This workflow builds the container with the latest web app changes, push it to the Azure Container Registry and, updates the web application *staging* slot to point to the latest container pushed. Then updates the database (just in case there is any change to be reflected in the database schema). Finally, swap the slots to leave the latest version in the production slot. 
+
+To ilustrate the versioning, the workflow generates a version number, based in the github workflow run number, which is stored in the app service web application settings. 
+
+The workflow is configured to be triggered by each change made to your repo source code (excluding changes affecting to the *infrastructure* and *.github/workflows* folders). 
+
+The definition is in the [build-deploy.yaml](.github/workflows/build-deploy.yaml) file, and have the following steps:
+* Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
+* Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
+* Executes a custom in-line script to get the required resources information related to the Azure Container Registry and the Azure SQL Database.
+* Executes a custom script to build the web application container image and push it to the Azure Container Registry, giving a unique label.
+* Updates the Web App Settings with the latest required values by using the [Azure App Service Settings](https://github.com/Azure/appservice-settings) action.
+* Updates the App Service Web Application deployment for the *staging* slot by using the [Azure Web App Deploy](https://github.com/Azure/webapps-deploy) action.
+* Setup the .NET Core enviroment versio to the latest 3.1, by using the [Setup DotNet](https://github.com/actions/setup-dotnet) action.
+* Executes a custom script to update the SQL Database by using the dotnet entity framework tool.
+* Finally, executes an Azure CLI script to swap the *staging* slot to *production*
+
+## Contributing
+Refer to the [Contributing page](/application/CONTRIBUTING.md)
