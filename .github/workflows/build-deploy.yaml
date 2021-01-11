@@ -125,7 +125,7 @@ jobs:
               "slotSetting": false
             }
           ]
-        connection-string-json: |
+        connection-strings-json: |
           [
             {
               "name": "MyDbConnection",
